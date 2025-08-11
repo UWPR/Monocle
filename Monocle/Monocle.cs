@@ -35,12 +35,26 @@ namespace Monocle
                     continue;
                 }
 
+                if (scan.PrecursorMasterScanNumber > scans.Count)
+                {
+                    Console.WriteLine(String.Format("Precursor scan {0} for scan {1} is out of range.", scan.PrecursorMasterScanNumber, scan.ScanNumber));
+                    continue;
+                }
+
                 Scan precursorScan = scans[scan.PrecursorMasterScanNumber - 1];
 
                 // Handle back-to-back triggered scans where the parent scan is assigned
                 // to the ms2 but the precursor is in the ms1.
                 if (scan.MsOrder == 2 && precursorScan.MsOrder == scan.MsOrder && precursorScan.PrecursorMasterScanNumber > 0) {
-                    precursorScan = scans[precursorScan.PrecursorMasterScanNumber - 1];
+                    if (precursorScan.PrecursorMasterScanNumber < scans.Count)
+                    {
+                        precursorScan = scans[precursorScan.PrecursorMasterScanNumber - 1];
+                    }
+                    else
+                    {
+                        Console.WriteLine(String.Format("Precursor scan {0} for scan {1} is out of range.", precursorScan.PrecursorMasterScanNumber, scan.ScanNumber));
+                        continue;
+                    }
                 }
 
                 // For low-res scans, or if ForceCharges is true, or if there's no charge information

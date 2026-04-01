@@ -420,7 +420,7 @@ namespace Monocle.File
         /// <returns></returns>
         private string EncodePeaks(Scan scan, bool intensity=false) {
             if (scan.PeakCount == 0) {
-                return "AAAAAAAAAAA=";
+                return "";
             }
             
             // Allocate space for m/z and int pairs, four bytes each.

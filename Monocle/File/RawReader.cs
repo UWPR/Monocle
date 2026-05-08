@@ -580,7 +580,7 @@ namespace Monocle.File
             }
 
             // Iterate until it reaches the upper bound.
-            for (int i = mid; i < mzs.Length; i++) {
+            for (int i = low; i < mzs.Length; i++) {
                 double mz = mzs[i];
                 double intensity = intensities[i];
                 if (System.Math.Abs(targetMz - mz) < tolerance) {

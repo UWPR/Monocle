@@ -17,7 +17,7 @@ namespace Monocle.File
 
         public void Open(string path, ScanReaderOptions options)
         {
-            db = new SqliteConnection("Data Source=" + path);
+            db = new SqliteConnection($"Data Source={path};Pooling=False");
             db.Open();
 
             var metadata = new SqliteCommand("SELECT name, value FROM metadata", db);
@@ -42,6 +42,7 @@ namespace Monocle.File
                 return;
             }
             db.Close();
+            db.Dispose();
         }
 
         public IEnumerator GetEnumerator()

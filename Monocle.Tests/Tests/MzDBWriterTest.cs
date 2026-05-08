@@ -2,21 +2,19 @@
 using Monocle.Data;
 using Monocle.File;
 using Microsoft.Data.Sqlite;
+using System;
 using Xunit;
 
 namespace Monocle.Tests {
-    public class MzDBWriterTest {
 
-        private string path = "data/test.mzdb";
+    public class MzDBWriterFixture : IDisposable {
+        public string Path { get; } = "data/test.mzdb";
 
-        public MzDBWriterTest() {
-            if (System.IO.File.Exists(path)) {
-                System.IO.File.Delete(path);
-            }
-            
+        public MzDBWriterFixture() {
             var writer = new MzDBWriter();
-            writer.Open(path);
+            writer.Open(Path);
             writer.WriteHeader(new ScanFileHeader());
+
             Scan scan1 = new Scan();
             scan1.ScanNumber = 1;
             scan1.BasePeakIntensity = 1;
@@ -37,6 +35,21 @@ namespace Monocle.Tests {
             writer.Close();
         }
 
+        public void Dispose() {
+            if (System.IO.File.Exists(Path)) {
+                System.IO.File.Delete(Path);
+            }
+        }
+    }
+
+    public class MzDBWriterTest : IClassFixture<MzDBWriterFixture> {
+
+        private readonly string path;
+
+        public MzDBWriterTest(MzDBWriterFixture fixture) {
+            path = fixture.Path;
+        }
+
         [Fact]
         public void testCreateDB() {
             Assert.True(System.IO.File.Exists(path));
@@ -44,10 +57,10 @@ namespace Monocle.Tests {
 
         [Fact]
         public void testVersion() {
-            var db = new SqliteConnection("Data Source=" + path);
+            using var db = new SqliteConnection($"Data Source={path};Pooling=False");
             db.Open();
             string sql = "Select value from metadata where name='version'";
-            var reader = new SqliteCommand(sql, db).ExecuteReader();
+            using var reader = new SqliteCommand(sql, db).ExecuteReader();
             int valueCount = 0;
             while(reader.Read()) {
                 Assert.Equal("1", reader.GetString(0));
@@ -58,11 +71,11 @@ namespace Monocle.Tests {
 
         [Fact]
         public void testScan() {
-            var db = new SqliteConnection("Data Source=" + path);
+            using var db = new SqliteConnection($"Data Source={path};Pooling=False");
             db.Open();
 
             string sql = "Select scan, filter_line, base_peak_mz, base_peak_intensity FROM scans WHERE scan=1";
-            var reader = new SqliteCommand(sql, db).ExecuteReader();
+            using var reader = new SqliteCommand(sql, db).ExecuteReader();
             int valueCount = 0;
             while(reader.Read()) {
                 Assert.Equal(1, reader.GetInt32(0));
@@ -90,6 +103,7 @@ namespace Monocle.Tests {
                     Assert.Equal(234, scan.Precursors[0].Mz);
                 }
             }
+            reader.Close();
         }
     }
 }

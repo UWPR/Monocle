@@ -265,7 +265,7 @@ namespace Monocle.File {
             if (string.IsNullOrEmpty(file) || !System.IO.File.Exists(file)) {
                 return "";
             }
-            using (FileStream fs = new FileStream(file, FileMode.Open))
+            using (FileStream fs = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             using (BufferedStream bs = new BufferedStream(fs))
             using (SHA1 sha1 = SHA1.Create())
             {

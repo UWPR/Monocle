@@ -40,7 +40,7 @@ namespace Monocle.File {
                 System.IO.File.Delete(path);
             }
 
-            db = new SqliteConnection($"Data Source={path}");
+            db = new SqliteConnection($"Data Source={path};Pooling=False");
             db.Open();
 
             new SqliteCommand("PRAGMA page_size = 65536", db).ExecuteNonQuery();
@@ -181,6 +181,8 @@ namespace Monocle.File {
             new SqliteCommand(sql, db).ExecuteNonQuery();
 
             db.Close();
+            db.Dispose();
+            SqliteConnection.ClearAllPools();
         }
 
         /// <summary>

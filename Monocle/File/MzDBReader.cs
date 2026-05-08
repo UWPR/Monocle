@@ -127,10 +127,10 @@ namespace Monocle.File
             if ((flags & MzDBWriter.HAS_INTENSITY) != 0) {
                 intensityOffset = mzBytes * peakCount;
             }
-            if ((flags & MzDBWriter.HAS_INTENSITY) != 0) {
+            if ((flags & MzDBWriter.HAS_BASELINE) != 0) {
                 baselineOffset = intensityOffset + (4 * peakCount);
             }
-            if ((flags & MzDBWriter.HAS_INTENSITY) != 0) {
+            if ((flags & MzDBWriter.HAS_NOISE) != 0) {
                 noiseOffset = baselineOffset + (4 * peakCount);
             }
             for (int i = 0; i < peakCount; ++i) {

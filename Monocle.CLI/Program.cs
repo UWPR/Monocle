@@ -52,6 +52,7 @@ namespace MakeMono
                 if (options.HeaderOnly) {
                     string jsonString = JsonSerializer.Serialize(header);
                     Console.WriteLine(jsonString);
+                    reader.Close();
                     return;
                 }
 

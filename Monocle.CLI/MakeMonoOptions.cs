@@ -38,7 +38,7 @@ namespace MakeMono
         [Option('q', "QuietRun", Required = false, HelpText = "Do not display file progress in console.")]
         public bool RunQuiet { get; set; } = false;
 
-        [Option('t', "OutputFileType", Required = false, HelpText = "Choose to output an mzXML \"mzxml\" or CSV file \"csv\".")]
+        [Option('t', "OutputFileType", Required = false, HelpText = "Choose to output an mzXML \"mzxml\", mzML \"mzml\", or CSV file \"csv\".")]
         public OutputFileType OutputFileType { get; set; } = OutputFileType.csv;
 
         [Option('o', "OutputFilePath", Required = false, HelpText = "File to write. Include directory, filename, and extension")]

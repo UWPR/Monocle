@@ -567,7 +567,7 @@ namespace Monocle.File
             // Find the nearest peak to the low end.
             int low = 0;
             int mid = 0;
-            int hi = 0;
+            int hi = mzs.Length - 1;
             double lowerMz = targetMz - tolerance;
             while (hi > low) {
                 mid = (int) System.Math.Ceiling((hi - low) / 2.0) + low;

@@ -73,6 +73,9 @@ namespace Monocle.Peak
                 highMz = targetMz + delta;
             }
             var peaks = scan.Centroids;
+            if (peaks.Count == 0) {
+                return -1;
+            }
             int i = PeakMatcher.NearestIndex(peaks, lowMz);
             if (peaks[i].Mz < lowMz) {
                 ++i;

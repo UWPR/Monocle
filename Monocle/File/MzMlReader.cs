@@ -118,7 +118,7 @@ namespace Monocle.File
                     if (Reader.Name == "spectrum")
                     {
                         scan.Centroids.Clear();
-                        if (binaryData.mzs.Count == 0 || binaryData.intensities.Count == 0) {
+                        if (binaryData.mzs == null || binaryData.intensities == null || binaryData.mzs.Count == 0 || binaryData.intensities.Count == 0) {
                             Console.WriteLine("Error: Binary data not found for scan " + scan.ScanNumber);
                             continue;
                         }

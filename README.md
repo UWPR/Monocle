@@ -65,7 +65,7 @@ Builds for the monocle library and the monocle cli app use the dotnet core comma
     
     -q, --QuietRun             Do not display file progress in console.
     
-    -t, --OutputFileType       Choose to output an mzXML "mzxml" or CSV file "csv".
+    -t, --OutputFileType       Choose to output an mzXML "mzxml", mzML "mzml", or CSV file "csv".
     
     -o, --OutputFilePath       File to write. Include directory, filename, and extension
     

@@ -82,7 +82,7 @@ namespace Monocle
         public bool WriteSps { get; set; } = false;
 
         /// <summary>
-        /// Choose to output an mzXML "mzxml" or CSV file "csv".
+        /// Choose to output an mzXML "mzxml", mzML "mzml", or CSV file "csv".
         /// </summary>
         public OutputFileType OutputFileType { get; set; } = OutputFileType.mzxml;
 

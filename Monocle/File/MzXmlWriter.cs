@@ -1,6 +1,7 @@
 
 using Monocle.Data;
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -187,13 +188,8 @@ namespace Monocle.File {
 
             for (int i = 0; i < scan.PeakCount; ++i) {
                 Centroid peak = scan.Centroids[i];
-                byte[] mzBytes = BitConverter.GetBytes((float)peak.Mz);
-                Array.Reverse(mzBytes);
-                mzBytes.CopyTo(bytes, i * 8);
-
-                byte[] intBytes = BitConverter.GetBytes((float)peak.Intensity);
-                Array.Reverse(intBytes);
-                intBytes.CopyTo(bytes, (i * 8) + 4);
+                BinaryPrimitives.WriteSingleBigEndian(bytes.AsSpan(i * 8),     (float)peak.Mz);
+                BinaryPrimitives.WriteSingleBigEndian(bytes.AsSpan(i * 8 + 4), (float)peak.Intensity);
             }
             return Convert.ToBase64String(bytes);
         }

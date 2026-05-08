@@ -188,7 +188,7 @@ namespace Monocle
 
             // SIM scan exclusion.
             // Using the filterline here since the scan type might not be read.
-            if (scan.ScanNumber != precursorScan.ScanNumber && !scan.FilterLine.ToLower().Contains("full")) {
+            if (scan.ScanNumber != precursorScan.ScanNumber && !scan.FilterLine.Contains("full", StringComparison.OrdinalIgnoreCase)) {
                 return false;
             }
 
@@ -294,6 +294,8 @@ namespace Monocle
                 chargeRange.High = Options.Charge_Range.High;
             }
             
+            Span<double> observedBuf = stackalloc double[7]; // max CompareSize across all IsotopeRange cases
+
             for (int charge = chargeRange.Low; charge <= chargeRange.High; charge++)
             {
                 // Restrict number of isotopes to consider based on precursor mass.
@@ -306,11 +308,14 @@ namespace Monocle
 
                 PeptideEnvelope envelope = PeptideEnvelopeExtractor.Extract(Ms1ScansCentroids, precursorMz, charge, isotopeRange.Left, isotopeRange.Isotopes);
 
+                var observed = observedBuf.Slice(0, isotopeRange.CompareSize);
+
                 // Get best match using dot product.
                 // Limit the number of isotopeRange peaks to test
                 for (int i = 0; i < (isotopeRange.Isotopes - (isotopeRange.CompareSize - 1)); ++i)
                 {
-                    List<double> observed = envelope.averageIntensity.GetRange(i, expected.Count);
+                    for (int j = 0; j < isotopeRange.CompareSize; j++)
+                        observed[j] = envelope.averageIntensity[i + j];
                     Vector.Scale(observed);
                     PeptideEnvelopeExtractor.ScaleByPeakCount(observed, envelope, i);
                     double score = Vector.Dot(observed, expected);

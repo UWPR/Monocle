@@ -1,4 +1,5 @@
 
+using System;
 using System.Collections.Generic;
 
 namespace Monocle.Math {
@@ -79,6 +80,25 @@ namespace Monocle.Math {
                     x[j] = x[j] / max;
                 }
             }
+        }
+
+        public static void Scale(Span<double> x)
+        {
+            double max = 0;
+            for (int j = 0; j < x.Length; j++)
+                if (x[j] > max) max = x[j];
+            if (max > 0)
+                for (int j = 0; j < x.Length; j++)
+                    x[j] /= max;
+        }
+
+        public static double Dot(Span<double> a, List<double> b)
+        {
+            double result = 0;
+            int len = System.Math.Min(a.Length, b.Count);
+            for (int i = 0; i < len; i++)
+                result += a[i] * b[i];
+            return result;
         }
     }
 }

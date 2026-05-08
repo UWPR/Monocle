@@ -1,6 +1,7 @@
 
 using Monocle.Data;
 using Monocle.Math;
+using System;
 using System.Collections.Generic;
 
 namespace Monocle.Peak 
@@ -62,6 +63,15 @@ namespace Monocle.Peak
                 {
                     x[j - i] *= envelope.mzs[j].Count / (double)envelope.MaxPeakCount;
                 }
+            }
+        }
+
+        public static void ScaleByPeakCount(Span<double> x, PeptideEnvelope envelope, int i)
+        {
+            if (envelope.MaxPeakCount > 0)
+            {
+                for (int j = i; j < i + x.Length; ++j)
+                    x[j - i] *= envelope.mzs[j].Count / (double)envelope.MaxPeakCount;
             }
         }
     }

@@ -17,26 +17,25 @@ namespace Monocle.File
 
         private string FilePath;
 
-        public Dictionary<string, string> scanAttrs = new Dictionary<string, string>()
+        private static readonly Dictionary<string, Action<Scan, string>> ScanSetters = new Dictionary<string, Action<Scan, string>>()
         {
-            { "ms level", "MsOrder" },
-            { "total ion current", "TotalIonCurrent" },
-            { "scan start time", "RetentionTime" }, // Time is in minutes.
-            { "collision energy", "CollisionEnergy" },
-            { "base peak m/z", "BasePeakMz" },
-            { "base peak intensity", "BasePeakIntensity" },
-            { "scan window lower limit", "StartMz" },
-            { "scan window upper limit", "EndMz" },
-            { "lowest observed m/z", "LowestMz" },
-            { "highest observed m/z", "HighestMz" },
-            { "filter string", "FilterLine" }
+            { "ms level",                (s, v) => { if (int.TryParse(v, out int i))       s.MsOrder = i; } },
+            { "total ion current",       (s, v) => { if (double.TryParse(v, out double d)) s.TotalIonCurrent = d; } },
+            { "scan start time",         (s, v) => { if (double.TryParse(v, out double d)) s.RetentionTime = d; } },
+            { "collision energy",        (s, v) => { if (double.TryParse(v, out double d)) s.CollisionEnergy = d; } },
+            { "base peak m/z",           (s, v) => { if (double.TryParse(v, out double d)) s.BasePeakMz = d; } },
+            { "base peak intensity",     (s, v) => { if (double.TryParse(v, out double d)) s.BasePeakIntensity = d; } },
+            { "scan window lower limit", (s, v) => { if (double.TryParse(v, out double d)) s.StartMz = d; } },
+            { "scan window upper limit", (s, v) => { if (double.TryParse(v, out double d)) s.EndMz = d; } },
+            { "lowest observed m/z",     (s, v) => { if (double.TryParse(v, out double d)) s.LowestMz = d; } },
+            { "highest observed m/z",    (s, v) => { if (double.TryParse(v, out double d)) s.HighestMz = d; } },
+            { "filter string",           (s, v) => s.FilterLine = v },
         };
 
-        public Dictionary<string, string> precursorAttrs = new Dictionary<string, string>()
+        private static readonly Dictionary<string, Action<Precursor, string>> PrecursorSetters = new Dictionary<string, Action<Precursor, string>>()
         {
-            // Precusor information
-            { "selected ion m/z", "Mz" },
-            { "charge state", "Charge" }
+            { "selected ion m/z", (p, v) => { if (double.TryParse(v, out double d)) p.Mz = d; } },
+            { "charge state",     (p, v) => { if (int.TryParse(v, out int i))       p.Charge = i; } },
         };
 
         /// <summary>
@@ -179,34 +178,16 @@ namespace Monocle.File
             }
         }
 
-        /// <summary>
-        /// Check and set attribute based on attributes dictionary
-        /// </summary>
-        /// <param name="attribute"></param>
-        /// <param name="value"></param>
         private void SetAttribute(CVParam cvParam, Scan scan, Precursor precursor)
         {
-            string member = "";
-            object o = null;
-            if (scanAttrs.ContainsKey(cvParam.Name))
+            if (ScanSetters.TryGetValue(cvParam.Name, out var scanSetter))
             {
-                member = scanAttrs[cvParam.Name];
-                o = scan;
+                scanSetter(scan, cvParam.Value);
             }
-            else if (precursorAttrs.ContainsKey(cvParam.Name))
+            else if (precursor != null && PrecursorSetters.TryGetValue(cvParam.Name, out var precursorSetter))
             {
-                member = precursorAttrs[cvParam.Name];
-                o = precursor;
+                precursorSetter(precursor, cvParam.Value);
             }
-
-            if (member == "")
-            {
-                return;
-            }
-
-            var prop = o.GetType().GetProperty(member);
-            var value = Convert.ChangeType(cvParam.Value, prop.PropertyType);
-            prop.SetValue(o, value);
         }
 
         private void ReadHeader()

@@ -1,9 +1,9 @@
 using Monocle.Data;
 using System;
+using System.Buffers.Binary;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using System.Xml;
 
 namespace Monocle.File
@@ -16,53 +16,30 @@ namespace Monocle.File
 
         private string FilePath;
 
-        #region Attributes for the MZXML file
-        public Dictionary<string, string> mzxmlAttributes = new Dictionary<string, string>()
+        private static readonly Dictionary<string, Action<Scan, string>> ScanSetters = new Dictionary<string, Action<Scan, string>>()
         {
-            { "num" , "ScanNumber" },
-            { "msLevel" , "MsOrder" },
-            { "scanEvent" , "ScanEvent" },
-            { "masterIndex" , "MasterIndex" },
-            { "peaksCount" , "PeakCount" },
-            { "ionInjectionTime" , "IonInjectionTime" },
-            { "elapsedScanTime" , "ElapsedScanTime" },
-            { "polarity" , "Polarity" },
-            { "scanType" , "ScanType" },
-            { "filterLine" , "FilterLine" },
-            { "description" , "Description" },
-            { "startMz","StartMz" },
-            { "endMz","EndMz" },
-            { "lowMz","LowestMz" },
-            { "highMz","HighestMz" },
-            { "basePeakMz","BasePeakMz" },
-            { "basePeakIntensity","BasePeakIntensity" },
-            { "faimsVoltageOn","FaimsVoltageOn" },
-            { "faimsCv","FaimsCV" }
+            { "num",               (s, v) => { if (int.TryParse(v, out int i))    s.ScanNumber = i; } },
+            { "msLevel",           (s, v) => { if (int.TryParse(v, out int i))    s.MsOrder = i; } },
+            { "scanEvent",         (s, v) => { if (int.TryParse(v, out int i))    s.ScanEvent = i; } },
+            { "masterIndex",       (s, v) => { if (int.TryParse(v, out int i))    s.MasterIndex = i; } },
+            { "peaksCount",        (s, v) => { if (int.TryParse(v, out int i))    s.PeakCount = i; } },
+            { "ionInjectionTime",  (s, v) => { if (double.TryParse(v, out double d)) s.IonInjectionTime = d; } },
+            { "elapsedScanTime",   (s, v) => { if (double.TryParse(v, out double d)) s.ElapsedScanTime = d; } },
+            { "scanType",          (s, v) => s.ScanType = v },
+            { "filterLine",        (s, v) => s.FilterLine = v },
+            { "description",       (s, v) => s.Description = v },
+            { "startMz",           (s, v) => { if (double.TryParse(v, out double d)) s.StartMz = d; } },
+            { "endMz",             (s, v) => { if (double.TryParse(v, out double d)) s.EndMz = d; } },
+            { "lowMz",             (s, v) => { if (double.TryParse(v, out double d)) s.LowestMz = d; } },
+            { "highMz",            (s, v) => { if (double.TryParse(v, out double d)) s.HighestMz = d; } },
+            { "basePeakMz",        (s, v) => { if (double.TryParse(v, out double d)) s.BasePeakMz = d; } },
+            { "basePeakIntensity", (s, v) => { if (double.TryParse(v, out double d)) s.BasePeakIntensity = d; } },
+            { "faimsCv",           (s, v) => { if (double.TryParse(v, out double d)) s.FaimsCV = d; } },
+            { "totIonCurrent",     (s, v) => { if (double.TryParse(v, out double d)) s.TotalIonCurrent = d; } },
+            { "collisionEnergy",   (s, v) => { if (double.TryParse(v, out double d)) s.CollisionEnergy = d; } },
+            { "precursorScanNum",  (s, v) => { if (int.TryParse(v, out int i))    s.PrecursorMasterScanNumber = i; } },
+            { "activationMethod",  (s, v) => s.PrecursorActivationMethod = v },
         };
-
-        public Dictionary<string, string> mzxmlMsnAttributes = new Dictionary<string, string>()
-        {
-            { "totIonCurrent","TotalIonCurrent" },
-            { "collisionEnergy","CollisionEnergy" }
-        };
-
-        public Dictionary<string, string> mzxmlPrecursorAttributes = new Dictionary<string, string>()
-        {
-            // Precusor information
-            { "precursorScanNum","PrecursorMasterScanNumber" },
-            { "activationMethod","PrecursorActivationMethod" }
-        };
-
-        public Dictionary<string, string> mzxmlPeaksAttributes = new Dictionary<string, string>()
-        {
-            // Peaks information
-            { "precision","PeaksPrecision" },
-            { "byteOrder","PeaksByteOrder" },
-            { "contentType","PeaksContentType" },
-            { "compressionType", "PeaksCompressionType" },
-            { "compressedLen", "PeaksCompressedLength" }
-        };
-        #endregion
 
         /// <summary>
         /// Open new fileStream to mzXML file.
@@ -167,53 +144,12 @@ namespace Monocle.File
         public void SetAttribute(Scan scan, string attribute, string value)
         {
             if (attribute == "retentionTime") {
-                // Parse time and change to minutes.
                 scan.RetentionTime = ParseRetentionTime(value);
+                return;
             }
-
-            string tempAttr = "";
-            if (mzxmlAttributes.ContainsKey(attribute))
+            if (ScanSetters.TryGetValue(attribute, out var setter))
             {
-                tempAttr = mzxmlAttributes[attribute];
-            }
-            else if (mzxmlPrecursorAttributes.ContainsKey(attribute))
-            {
-                tempAttr = mzxmlPrecursorAttributes[attribute];
-            }
-            else if (mzxmlPeaksAttributes.ContainsKey(attribute))
-            {
-                tempAttr = mzxmlPeaksAttributes[attribute];
-            }
-            else if (mzxmlMsnAttributes.ContainsKey(attribute))
-            {
-                tempAttr = mzxmlMsnAttributes[attribute];
-            }
-
-            if (tempAttr != "")
-            {
-                PropertyInfo piTmp;
-                double dTmp; bool bTmp;
-                if (typeof(Scan).GetProperty(tempAttr) != null) //check names even though readOnly DGV
-                {
-                    piTmp = typeof(Scan).GetProperty(tempAttr);
-
-                    if (piTmp.PropertyType == typeof(int) && Int32.TryParse(value, out int iTmp))
-                    {
-                        piTmp.SetValue(scan, iTmp);
-                    }
-                    else if (piTmp.PropertyType == typeof(string))
-                    {
-                        piTmp.SetValue(scan, value);
-                    }
-                    else if (piTmp.PropertyType == typeof(double) && Double.TryParse(value, out dTmp))
-                    {
-                        piTmp.SetValue(scan, dTmp);
-                    }
-                    else if (piTmp.PropertyType == typeof(bool) && Boolean.TryParse(value, out bTmp))
-                    {
-                        piTmp.SetValue(scan, bTmp);
-                    }
-                }
+                setter(scan, value);
             }
         }
 
@@ -277,25 +213,18 @@ namespace Monocle.File
         /// <param name="str"></param>
         /// <param name="peakCount"></param>
         /// <returns></returns>
-        private List<Centroid> ReadPeaks(string str,int peakCount) {
-            List<Centroid> peaks = new List<Centroid>();
-            int size = peakCount * 2;
-            if (String.Compare(str, "AAAAAAAAAAA=") == 0)
+        private List<Centroid> ReadPeaks(string str, int peakCount) {
+            var peaks = new List<Centroid>(peakCount);
+            if (str == "AAAAAAAAAAA=")
             {
                 return peaks;
             }
-            byte[] byteEncoded = Convert.FromBase64String(str);
-            Array.Reverse(byteEncoded);
-            float[] values = new float[size];
-            for(int i = 0; i < size; i++)
-            {
-                values[i] = BitConverter.ToSingle(byteEncoded, i * 4);
-            }
-            Array.Reverse(values);
+            byte[] bytes = Convert.FromBase64String(str);
             for (int i = 0; i < peakCount; ++i)
             {
-                Centroid tempCent = new Centroid(values[2 * i], values[(2 * i) + 1]);
-                peaks.Add(tempCent);
+                float mz        = BinaryPrimitives.ReadSingleBigEndian(bytes.AsSpan(i * 8));
+                float intensity = BinaryPrimitives.ReadSingleBigEndian(bytes.AsSpan(i * 8 + 4));
+                peaks.Add(new Centroid(mz, intensity));
             }
             return peaks;
         }

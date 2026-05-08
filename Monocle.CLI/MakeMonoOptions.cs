@@ -1,5 +1,6 @@
-﻿using CommandLine;
+using CommandLine;
 using Monocle;
+using System.Collections.Generic;
 
 namespace MakeMono
 {
@@ -8,8 +9,8 @@ namespace MakeMono
     /// </summary>
     public class MakeMonoOptions
     {
-        [Option('f', "File", Required = true, HelpText = "Input file for monoisotopic peak correction")]
-        public string InputFilePath { get; set; } = "";
+        [Option('f', "File", Required = true, Min = 1, HelpText = "Input file(s) for monoisotopic peak correction. Multiple files and wildcard patterns (e.g. *.raw) are supported.")]
+        public IEnumerable<string> InputFilePaths { get; set; } = new List<string>();
 
         [Option('n', "NumOfScans", Required = false, HelpText = "The number of scans to average, default: +/- 6")]
         public int NumOfScans { get; set; } = 6;
@@ -31,7 +32,7 @@ namespace MakeMono
 
         [Option('m', "MsLevel", Required = false, HelpText = "Select the MS level at which monoisotopic m/z will be adjusted.")]
         public int MS_Level { get; set; } = 2;
-        
+
         [Option('i', "UseMostIntense", Required = false, HelpText = "Re-assign precursor m/z to the most intense peak in the isolation window.")]
         public bool UseMostIntense { get; set; } = false;
 
@@ -41,13 +42,16 @@ namespace MakeMono
         [Option('t', "OutputFileType", Required = false, HelpText = "Choose to output an mzXML \"mzxml\", mzML \"mzml\", or CSV file \"csv\".")]
         public OutputFileType OutputFileType { get; set; } = OutputFileType.csv;
 
-        [Option('o', "OutputFilePath", Required = false, HelpText = "File to write. Include directory, filename, and extension")]
+        [Option('o', "OutputFilePath", Required = false, HelpText = "Output path. For multiple input files, must be an existing directory. For a single input file, may be a directory or a file path.")]
         public string OutputFilePath { get; set; } = "";
+
+        [Option('k', "NumConcurrent", Required = false, HelpText = "Number of concurrent conversions, default: 4")]
+        public int NumConcurrent { get; set; } = 4;
 
         [Option('d', "Debug", Hidden = true, Required = false, HelpText = "Verbose debug output.")]
         public bool WriteDebug { get; set; } = false;
 
-        [Option('e', "HeaderOnly", Hidden = true, Required = false, HelpText = "Output run information as json and exit.")]
+        [Option('e', "HeaderOnly", Hidden = true, Required = false, HelpText = "Single-file only. Output run information as json and exit.")]
         public bool HeaderOnly { get; set; } = false;
 
         [Option('s', "WriteSps", Hidden = true, Required = false, HelpText = "Write SPS ions as independent precursors.")]
@@ -59,7 +63,7 @@ namespace MakeMono
         [Option('r', "RawMonoMz", Hidden = true, Required = false, HelpText = "Read monoisotopic m/z from raw file header. Not recommended for use with Monocle algorithm.")]
         public bool RawMonoMz { get; set; } = false;
 
-        [Option('k', "SkipMono", Hidden = true, Required = false, HelpText = "Avoid monoisotopic peak detection. Data may still be modified.")]
+        [Option("SkipMono", Hidden = true, Required = false, HelpText = "Avoid monoisotopic peak detection. Data may still be modified.")]
         public bool SkipMono { get; set; } = false;
 
         [Option("Ms2Ms3Precursor", Hidden = true, Required = false, HelpText = "Assign precursors to the ms3 scan from the parent ms2.")]

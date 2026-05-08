@@ -47,5 +47,25 @@ namespace Monocle.Data {
         /// </summary>
         public string InstrumentModel { get; set; } = "unknown";
 
+        /// <summary>
+        /// Ionization mode of the instrument (e.g. "NSI", "ESI", "APCI").
+        /// </summary>
+        public string InstrumentIonization { get; set; } = "";
+
+        /// <summary>
+        /// Mass analyzer type of the instrument (e.g. "FTMS", "ITMS").
+        /// </summary>
+        public string InstrumentMassAnalyzer { get; set; } = "";
+
+        /// <summary>
+        /// Name of the acquisition software (e.g. "Xcalibur").
+        /// </summary>
+        public string AcquisitionSoftwareName { get; set; } = "";
+
+        /// <summary>
+        /// Version of the acquisition software.
+        /// </summary>
+        public string AcquisitionSoftwareVersion { get; set; } = "";
+
     }
 }

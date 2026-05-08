@@ -81,11 +81,12 @@ namespace Monocle.File {
             writer.WriteAttributeString("scanType", scan.ScanType.ToString());
             writer.WriteAttributeString("filterLine", scan.FilterLine);
             writer.WriteAttributeString("retentionTime", MakeRetentionTimeString(scan.RetentionTime));
+            writer.WriteAttributeString("injectionTime", "PT" + (scan.IonInjectionTime / 1000.0).ToString("F4", CultureInfo.InvariantCulture) + "S");
             writer.WriteAttributeString("startMz", scan.StartMz.ToString());
             writer.WriteAttributeString("endMz", scan.EndMz.ToString("G17", CultureInfo.InvariantCulture));
-            writer.WriteAttributeString("lowMz", scan.LowestMz.ToString("G17",CultureInfo.InvariantCulture));
-            writer.WriteAttributeString("highMz", scan.HighestMz.ToString("G17", CultureInfo.InvariantCulture));
-            writer.WriteAttributeString("basePeakMz", scan.BasePeakMz.ToString("G17", CultureInfo.InvariantCulture));
+            writer.WriteAttributeString("lowMz", scan.LowestMz.ToString("F6", CultureInfo.InvariantCulture));
+            writer.WriteAttributeString("highMz", scan.HighestMz.ToString("F6", CultureInfo.InvariantCulture));
+            writer.WriteAttributeString("basePeakMz", scan.BasePeakMz.ToString("F6", CultureInfo.InvariantCulture));
             writer.WriteAttributeString("basePeakIntensity", scan.BasePeakIntensity.ToString());
             writer.WriteAttributeString("totIonCurrent", scan.TotalIonCurrent.ToString());
 
@@ -97,10 +98,10 @@ namespace Monocle.File {
                 {
                     writer.WriteStartElement("precursorMz");
                     writer.WriteAttributeString("precursorScanNum", scan.PrecursorMasterScanNumber.ToString());
-                    writer.WriteAttributeString("precursorIntensity", precursor.Intensity.ToString());
+                    writer.WriteAttributeString("precursorIntensity", precursor.Intensity.ToString("F4", CultureInfo.InvariantCulture));
                     writer.WriteAttributeString("precursorCharge", precursor.Charge.ToString());
                     writer.WriteAttributeString("activationMethod", scan.PrecursorActivationMethod.ToString());
-                    writer.WriteString(precursor.Mz.ToString("G17", CultureInfo.InvariantCulture));
+                    writer.WriteString(precursor.Mz.ToString("F6", CultureInfo.InvariantCulture));
                     writer.WriteEndElement(); // precursorMz
                 }
             }
@@ -137,14 +138,38 @@ namespace Monocle.File {
             writer.WriteAttributeString("fileType", "RAWData");
             writer.WriteAttributeString("fileSha1", CalculateFileHash(header.FilePath));
             writer.WriteEndElement(); // parentFile
-            
+
+            writer.WriteStartElement("msInstrument");
+            WriteInstrumentCategory("msManufacturer", header.InstrumentManufacturer);
+            WriteInstrumentCategory("msModel", header.InstrumentModel);
+            WriteInstrumentCategory("msIonisation", header.InstrumentIonization);
+            WriteInstrumentCategory("msMassAnalyzer", header.InstrumentMassAnalyzer);
+            if (!string.IsNullOrEmpty(header.AcquisitionSoftwareName)) {
+                writer.WriteStartElement("software");
+                writer.WriteAttributeString("type", "acquisition");
+                writer.WriteAttributeString("name", header.AcquisitionSoftwareName);
+                writer.WriteAttributeString("version", header.AcquisitionSoftwareVersion);
+                writer.WriteEndElement(); // software
+            }
+            writer.WriteEndElement(); // msInstrument
+
             writer.WriteStartElement("dataProcessing");
             writer.WriteStartElement("software");
             writer.WriteAttributeString("type", "conversion");
             writer.WriteAttributeString("name", "Monocle");
-            writer.WriteAttributeString("version", "1");
+            var version = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version?.ToString(2) ?? "1";
+            writer.WriteAttributeString("version", version);
             writer.WriteEndElement(); // software
             writer.WriteEndElement(); // dataProcessing
+        }
+
+        private void WriteInstrumentCategory(string name, string value) {
+            if (!string.IsNullOrEmpty(value)) {
+                writer.WriteStartElement(name);
+                writer.WriteAttributeString("category", name);
+                writer.WriteAttributeString("value", value);
+                writer.WriteEndElement();
+            }
         }
 
         /// <summary>

@@ -29,15 +29,14 @@ namespace MakeMono
         /// <param name="Errors"></param>
         private void HandleParseError(IEnumerable<Error> Errors)
         {
-            List<string> errors = new List<string>();
-            foreach(Error error in Errors)
+            foreach (Error error in Errors)
             {
-                if(error.Tag != ErrorType.VersionRequestedError && error.Tag != ErrorType.HelpRequestedError)
+                if (error.Tag != ErrorType.VersionRequestedError && error.Tag != ErrorType.HelpRequestedError)
                 {
-                    errors.Add(error.Tag.ToString());
+                    Environment.Exit(1);
                 }
             }
-            throw new Exception(String.Join("\n", errors));
+            Environment.Exit(0);
         }
     }
 }

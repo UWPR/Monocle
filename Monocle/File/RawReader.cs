@@ -81,8 +81,15 @@ namespace Monocle.File
             header.EndTime = (float) rawFile.RunHeaderEx.EndTime;
             header.AcquisitionDate = rawFile.CreationDate;
             header.ScanCount = rawFile.RunHeaderEx.SpectraCount;
-            header.InstrumentModel = rawFile.GetInstrumentData().Model;
-            header.InstrumentManufacturer = "ThermoFisher";
+            var instrumentData = rawFile.GetInstrumentData();
+            header.InstrumentModel = instrumentData.Model;
+            header.InstrumentManufacturer = "Thermo Scientific";
+            header.AcquisitionSoftwareName = "Xcalibur";
+            header.AcquisitionSoftwareVersion = instrumentData.SoftwareVersion;
+            int firstScan = rawFile.RunHeaderEx.FirstSpectrum;
+            var firstFilter = rawFile.GetFilterForScanNumber(firstScan);
+            header.InstrumentMassAnalyzer = readDetectorType(firstFilter.MassAnalyzer);
+            header.InstrumentIonization = readIonizationMode(firstFilter.IonizationMode);
             return header;
         }
 
@@ -588,6 +595,20 @@ namespace Monocle.File
             }
 
             return precursorIntensity;
+        }
+
+        private static string readIonizationMode(IonizationModeType type) {
+            switch (type) {
+                case IonizationModeType.NanoSpray: return "NSI";
+                case IonizationModeType.ElectroSpray: return "ESI";
+                case IonizationModeType.AtmosphericPressureChemicalIonization: return "APCI";
+                case IonizationModeType.ChemicalIonization: return "CI";
+                case IonizationModeType.ElectronImpact: return "EI";
+                case IonizationModeType.FastAtomBombardment: return "FAB";
+                case IonizationModeType.ThermoSpray: return "TSP";
+                case IonizationModeType.MatrixAssistedLaserDesorptionIonization: return "MALDI";
+                default: return "";
+            }
         }
 
         private string readDetectorType(MassAnalyzerType type) {

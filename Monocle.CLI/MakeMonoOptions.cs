@@ -45,7 +45,7 @@ namespace MakeMono
         [Option('o', "OutputFilePath", Required = false, HelpText = "Output path. For multiple input files, must be an existing directory. For a single input file, may be a directory or a file path.")]
         public string OutputFilePath { get; set; } = "";
 
-        [Option('k', "NumConcurrent", Required = false, HelpText = "Number of concurrent conversions, default: 4")]
+        [Option('p', "NumConcurrent", Required = false, HelpText = "Number of concurrent conversions at a time, default: 4")]
         public int NumConcurrent { get; set; } = 4;
 
         [Option('d', "Debug", Hidden = true, Required = false, HelpText = "Verbose debug output.")]
@@ -63,7 +63,7 @@ namespace MakeMono
         [Option('r', "RawMonoMz", Hidden = true, Required = false, HelpText = "Read monoisotopic m/z from raw file header. Not recommended for use with Monocle algorithm.")]
         public bool RawMonoMz { get; set; } = false;
 
-        [Option("SkipMono", Hidden = true, Required = false, HelpText = "Avoid monoisotopic peak detection. Data may still be modified.")]
+        [Option('k', "SkipMono", Hidden = true, Required = false, HelpText = "Avoid monoisotopic peak detection. Data may still be modified.")]
         public bool SkipMono { get; set; } = false;
 
         [Option("Ms2Ms3Precursor", Hidden = true, Required = false, HelpText = "Assign precursors to the ms3 scan from the parent ms2.")]

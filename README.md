@@ -26,9 +26,11 @@ The following output types are supported:
  - mzxml
  - mzml
 
-Example:
+Examples:
 
     Monocle.CLI.exe -f x00123.raw -t csv
+
+    Monocle.CLI.exe -f "*.raw" -t mzxml -o /path/to/output/dir -p 4
 
 ### How to Build
 Builds for the monocle library and the monocle cli app use the dotnet core command line.
@@ -45,7 +47,8 @@ Builds for the monocle library and the monocle cli app use the dotnet core comma
 
 ### Monocle.CLI Option Information:
 
-    -f, --File                 Required. Input file for monoisotopic peak correction
+    -f, --File                 Required. Input file(s) for monoisotopic peak correction.
+                               Multiple files and wildcard patterns (e.g. *.raw) are supported.
     
     -n, --NumOfScans           The number of scans to average, default: +/- 6
     
@@ -67,7 +70,10 @@ Builds for the monocle library and the monocle cli app use the dotnet core comma
     
     -t, --OutputFileType       Choose to output an mzXML "mzxml", mzML "mzml", or CSV file "csv".
     
-    -o, --OutputFilePath       File to write. Include directory, filename, and extension
+    -o, --OutputFilePath       Output path. For multiple input files, must be an existing directory.
+                               For a single input file, may be a directory or a file path.
+    
+    -p, --NumConcurrent        Number of concurrent conversions at a time, default: 4
     
     --help                     Display this help screen.
     

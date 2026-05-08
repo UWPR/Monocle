@@ -55,7 +55,9 @@ namespace Monocle.File
         public void Open(string path, ScanReaderOptions options)
         {
             Options = options;
-            rawFile = RawFileReaderAdapter.FileFactory(path);
+            var resolvedLink = new FileInfo(path).ResolveLinkTarget(returnFinalTarget: true);
+            string resolvedPath = resolvedLink?.FullName ?? path;
+            rawFile = RawFileReaderAdapter.FileFactory(resolvedPath);
             if (!rawFile.IsOpen)
             {
                 Console.WriteLine(" RawFile Error: File could not be opened: " + path);

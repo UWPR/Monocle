@@ -17,9 +17,11 @@ The **RawFileReader** reading tool. Copyright © 2016 by Thermo Fisher Scientifi
 
 ### How to use the command-line application
 Download the zip file from the latest release above, extract and navigate
-to it's contents.  Run the Monocle.CLI.exe file with the -f option to specify
-the input file and the -t option to specify the output type. The output file
-will be written in the same directory as the input file.
+to its contents.  Run the Monocle.CLI.exe file with the -f option to specify
+one or more input files and the -t option to specify the output type.  Input
+files can be specified as a single file, multiple explicit filenames, or a
+wildcard pattern (e.g. *.raw).  By default, output files are written to the
+same directory as each input file.
 
 The following output types are supported:
  - csv
@@ -29,6 +31,8 @@ The following output types are supported:
 Examples:
 
     Monocle.CLI.exe -f x00123.raw -t csv
+
+    Monocle.CLI.exe -f fileA.raw fileB.raw fileC.raw -t mzxml -o /path/to/output/dir -p 8
 
     Monocle.CLI.exe -f "*.raw" -t mzxml -o /path/to/output/dir -p 4
 

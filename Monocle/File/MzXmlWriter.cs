@@ -158,10 +158,25 @@ namespace Monocle.File {
             writer.WriteStartElement("software");
             writer.WriteAttributeString("type", "conversion");
             writer.WriteAttributeString("name", "Monocle");
-            var version = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version?.ToString(2) ?? "1";
-            writer.WriteAttributeString("version", version);
+            writer.WriteAttributeString("version", GetMonocleVersion());
             writer.WriteEndElement(); // software
             writer.WriteEndElement(); // dataProcessing
+        }
+
+        internal static string GetMonocleVersion()
+        {
+            var attrs = System.Reflection.Assembly.GetEntryAssembly()
+                ?.GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute), false);
+            var info = attrs?.Length > 0
+                ? ((System.Reflection.AssemblyInformationalVersionAttribute)attrs[0]).InformationalVersion
+                : "";
+            int plus = info.IndexOf('+');
+            if (plus >= 0)
+            {
+                string commit = info.Substring(plus + 1);
+                return info.Substring(0, plus + 1) + (commit.Length >= 7 ? commit.Substring(0, 7) : commit);
+            }
+            return info.Length > 0 ? info : "1";
         }
 
         private void WriteInstrumentCategory(string name, string value) {

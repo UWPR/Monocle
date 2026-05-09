@@ -39,7 +39,7 @@ namespace Monocle.File
             { "MS:1000579", "MS1 spectrum" },
             { "MS:1000580", "MSn spectrum" },
             { "MS:1000768", "Thermo nativeID format" },
-            { "MS:1000563", "Thermo RAW file" },
+            { "MS:1000563", "Thermo RAW format" },
             { "MS:1000799", "custom unreleased software tool" },
             { "MS:1000569", "SHA-1" },
             { "MS:1000448", "LTQ FT" },
@@ -89,7 +89,8 @@ namespace Monocle.File
             { "UO:0000266", "electronvolt" },
             { "MS:1000235", "total ion current chromatogram" },
             { "MS:1000595", "time array" },
-            { "MS:1000927", "ion injection time"}
+            { "MS:1000927", "ion injection time"},
+            { "MS:1000492", "Thermo Electron instrument model" }
         };
 
         public void Open(string path) {
@@ -143,17 +144,41 @@ namespace Monocle.File
             WriteCVParam("MS:1000579", "");
             WriteCVParam("MS:1000580", "");
 
-            writer.WriteEndElement(); // fileContent                
-            writer.WriteEndElement(); // fileDescription        
+            writer.WriteEndElement(); // fileContent
+
+            writer.WriteStartElement("sourceFileList");
+            writer.WriteAttributeString("count", "1");
+            writer.WriteStartElement("sourceFile");
+            writer.WriteAttributeString("id", "sourcefile_1");
+            writer.WriteAttributeString("name", header.FileName);
+            writer.WriteAttributeString("location", FilePathToLocation(header.FilePath));
+            WriteCVParam("MS:1000768", "");
+            WriteCVParam("MS:1000563", "");
+            WriteCVParam("MS:1000569", CalculateSourceFileHash(header.FilePath));
+            writer.WriteEndElement(); // sourceFile
+            writer.WriteEndElement(); // sourceFileList
+
+            writer.WriteEndElement(); // fileDescription
+
+            if (!string.IsNullOrEmpty(header.InstrumentModel))
+            {
+                writer.WriteStartElement("referenceableParamGroupList");
+                writer.WriteAttributeString("count", "1");
+                writer.WriteStartElement("referenceableParamGroup");
+                writer.WriteAttributeString("id", "CommonInstrumentParams");
+                WriteCVParam("MS:1000492", header.InstrumentModel);
+                writer.WriteEndElement(); // referenceableParamGroup
+                writer.WriteEndElement(); // referenceableParamGroupList
+            }
 
             writer.WriteStartElement("softwareList");
             writer.WriteAttributeString("count", "1");
 
             writer.WriteStartElement("software");
             writer.WriteAttributeString("id", "Monocle");
-            writer.WriteAttributeString("version", "1");
+            writer.WriteAttributeString("version", MzXmlWriter.GetMonocleVersion());
 
-            WriteCVParam("MS:1000799", "custom unreleased software tool");
+            WriteCVParam("MS:1000799", "Thermo RAW file conversion tool");
 
             writer.WriteEndElement(); // software                
             writer.WriteEndElement(); // softwareList                                                                                
@@ -164,9 +189,16 @@ namespace Monocle.File
             writer.WriteStartElement("instrumentConfiguration");
             writer.WriteAttributeString("id", "IC1");
 
+            if (!string.IsNullOrEmpty(header.InstrumentModel))
+            {
+                writer.WriteStartElement("referenceableParamGroupRef");
+                writer.WriteAttributeString("ref", "CommonInstrumentParams");
+                writer.WriteEndElement(); // referenceableParamGroupRef
+            }
+
             writer.WriteStartElement("softwareRef");
             writer.WriteAttributeString("ref", "Xcalibur");
-            writer.WriteEndElement(); // softwareRef       
+            writer.WriteEndElement(); // softwareRef
 
             writer.WriteEndElement(); // instrumentConfiguration                
             writer.WriteEndElement(); // instrumentConfigurationList                
@@ -389,6 +421,38 @@ namespace Monocle.File
             writer.WriteEndElement(); // indexedmzML
 
             writer.WriteEndDocument();
+        }
+
+        private static string CalculateSourceFileHash(string filePath)
+        {
+            if (string.IsNullOrEmpty(filePath) || !System.IO.File.Exists(filePath))
+            {
+                return "";
+            }
+            using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var bs = new BufferedStream(fs))
+            using (var sha1 = SHA1.Create())
+            {
+                byte[] hash = sha1.ComputeHash(bs);
+                return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+            }
+        }
+
+        private static string FilePathToLocation(string filePath)
+        {
+            string dir = Path.GetDirectoryName(Path.GetFullPath(filePath)) ?? "";
+            if (string.IsNullOrEmpty(dir))
+            {
+                return "";
+            }
+            try
+            {
+                return new Uri(dir).AbsoluteUri;
+            }
+            catch
+            {
+                return "file:///" + dir.Replace('\\', '/');
+            }
         }
 
         private void WriteCVParam(string accession, string value, string unitAccession="") {

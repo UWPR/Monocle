@@ -40,7 +40,7 @@ namespace Monocle.File
             { "MS:1000580", "MSn spectrum" },
             { "MS:1000768", "Thermo nativeID format" },
             { "MS:1000563", "Thermo RAW format" },
-            { "MS:1000799", "custom unreleased software tool" },
+            { "MS:1003977", "Monocle" },
             { "MS:1000569", "SHA-1" },
             { "MS:1000448", "LTQ FT" },
             { "MS:1000529", "instrument serial number" },
@@ -178,7 +178,7 @@ namespace Monocle.File
             writer.WriteAttributeString("id", "Monocle");
             writer.WriteAttributeString("version", MzXmlWriter.GetMonocleVersion());
 
-            WriteCVParam("MS:1000799", "Thermo RAW file conversion tool");
+            WriteCVParam("MS:1003977", "");
 
             writer.WriteEndElement(); // software                
             writer.WriteEndElement(); // softwareList                                                                                

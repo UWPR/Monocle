@@ -49,6 +49,9 @@ Builds for the monocle library and the monocle cli app use the dotnet core comma
 	# Use -r for the runtime that applies to you
 	dotnet publish -c Release -r win10-x64
 
+	# Linux self-contained release build
+	dotnet publish -c Release -r linux-x64 --self-contained -o Monocle.CLI -p:PublishTrimmed=true
+
 ### Monocle.CLI Option Information:
 
     -f, --File                 Required. Input file(s) for monoisotopic peak correction.
